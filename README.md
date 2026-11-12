@@ -19,6 +19,87 @@ This repository holds the **infrastructure and deployments**. The application it
 - **Security**: SOPS, Kyverno, Trivy, cert-manager, IaC scanning in CI
 - **Exposure**: Cloudflare Tunnel, no open ports
 
+## Current architecture (M1)
+
+```mermaid
+flowchart LR
+  subgraph WS["Workstation"]
+    TF["Terraform"]
+    AN["Ansible"]
+    KC["kubectl<br/>~/.kube/homelab.yaml"]
+  end
+
+  subgraph LAN["Home LAN (no inbound Internet access)"]
+    subgraph PVE["Proxmox VE host"]
+      TPL["VM 9000<br/>Debian 13 cloud-init template<br/>+ qemu-guest-agent"]
+      SRV["k3s-server-1<br/>control plane"]
+      AGT["k3s-agent-1<br/>worker"]
+    end
+  end
+
+  TF -- "Proxmox API (token)" --> PVE
+  TPL -. "full clone + cloud-init" .-> SRV
+  TPL -. "full clone + cloud-init" .-> AGT
+  TF -- "outputs → inventory" --> AN
+  AN -- "SSH: hardening, k3s install" --> SRV
+  AN -- "SSH: hardening, k3s join" --> AGT
+  AGT -- "join token, :6443" --> SRV
+  SRV -- "kubeconfig" --> KC
+  KC -- ":6443" --> SRV
+```
+
+- One physical **Proxmox VE** host.
+- A Debian 13 **cloud-init template** (VM 9000), with the QEMU guest agent baked in. See [the runbook](docs/runbooks/template-cloud-init.md).
+- **Terraform** clones the template into two VMs: `k3s-server-1` (control plane) and `k3s-agent-1` (worker).
+- **Ansible** hardens the VMs, installs a pinned **k3s** version, joins the agent to the server and copies the kubeconfig to the workstation.
+- The Ansible inventory is **generated from Terraform outputs**, so the VM list lives in one place.
+- Nothing is exposed to the Internet: Proxmox and the cluster are reachable from the LAN only.
+
+## Rebuild the cluster
+
+### Prerequisites
+
+- A Proxmox VE host with the cloud-init template built. Build it with [`scripts/build-template.sh`](scripts/build-template.sh), run on the node:
+
+  ```bash
+  ssh root@<proxmox-host> 'bash -s' < scripts/build-template.sh
+  ```
+
+  The [runbook](docs/runbooks/template-cloud-init.md) explains each step.
+- A Proxmox user `terraform@pve` with a restricted role and an API token.
+- On the workstation: Terraform, Ansible, `kubectl`, and an SSH key loaded in `ssh-agent`.
+- `terraform/terraform.tfvars`, created from [`terraform.tfvars.example`](terraform/terraform.tfvars.example).
+- `terraform/.env` with the Proxmox credentials, created from [`terraform/.env.example`](terraform/.env.example). Both files are git-ignored:
+
+  ```bash
+  cp terraform/.env.example terraform/.env && chmod 600 terraform/.env
+  ```
+
+### Steps
+
+From the repository root:
+
+```bash
+make rebuild
+```
+
+It runs, in order, and stops at the first error:
+
+1. `terraform init` and `terraform apply` (shows the plan and asks for `yes`; `make rebuild AUTO_APPROVE=1` skips the prompt), with the credentials from `terraform/.env` loaded for Terraform only.
+2. `make inventory`: generates `ansible/inventory/hosts.yml` from Terraform outputs.
+3. `make known-hosts-reset`: forgets the SSH host keys of the recreated VMs.
+4. `make ansible`: waits for the VMs to accept SSH, hardens them, installs k3s and writes the kubeconfig to `~/.kube/homelab.yaml`.
+5. `kubectl wait`: fails unless every node is `Ready` within 3 minutes, then lists the nodes.
+
+To tear everything down: `make destroy` (always asks for confirmation). A full rebuild test is `make destroy && make rebuild`.
+
+Each step is also a target of its own; run `make help` to list them all.
+
+## Documentation
+
+- [Architecture decision records](docs/adr/)
+- [Runbooks](docs/runbooks/)
+
 ## Roadmap
 
 | Milestone | Scope | Status |
