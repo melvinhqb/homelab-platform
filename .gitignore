@@ -1,0 +1,67 @@
+# --- Terraform ---
+# State files (local state, backups)
+*.tfstate
+*.tfstate.*
+
+# Provider plugins & modules cache
+.terraform/
+
+# Variable files (may contain secrets) — keep examples
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Crash logs & override files
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# --- Keys & secrets ---
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+id_ecdsa
+.ssh/
+
+# --- Terraform (compléments) ---
+# Plan files: they can contain secrets in clear text
+*.tfplan
+tfplan
+# CLI config that may contain API tokens
+.terraformrc
+terraform.rc
+
+# --- Ansible ---
+*.retry
+.vault_pass*
+vault_password*
+
+# --- Kubernetes ---
+kubeconfig
+*.kubeconfig
+.kube/
+
+# --- SOPS / age ---
+# Private age keys (the encrypted files themselves ARE committed)
+*.agekey
+keys.txt
+*.dec.yaml
+*.decrypted.*
+
+# --- Env files ---
+.env
+.env.*
+!.env.example
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
