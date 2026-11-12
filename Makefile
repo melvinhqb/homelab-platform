@@ -3,7 +3,7 @@ ANSIBLE_DIR   := ansible
 # Generated from Terraform and git-ignored (real IPs and user name).
 INVENTORY     := $(ANSIBLE_DIR)/inventory/hosts.yml
 
-.PHONY: help inventory known-hosts-reset ansible tf-check
+.PHONY: help inventory known-hosts-reset ansible tf-check ansible-check
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -23,3 +23,6 @@ tf-check: ## Run the same Terraform checks as the CI, locally
 	terraform -chdir=$(TF_DIR) validate
 	cd $(TF_DIR) && tflint --init && tflint
 	checkov -d $(TF_DIR) --framework terraform --quiet
+
+ansible-check: ## Run the same Ansible checks as the CI, locally
+	cd $(ANSIBLE_DIR) && ansible-lint playbooks/site.yml roles/
