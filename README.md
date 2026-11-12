@@ -97,14 +97,15 @@ Each step is also a target of its own; run `make help` to list them all.
 
 ## Documentation
 
-- [Architecture decision records](docs/adr/)
-- [Runbooks](docs/runbooks/)
+- [Architecture decision records](docs/adr/): why each main option was chosen.
+- [Runbooks](docs/runbooks/): how to run each operational task.
+- [Build journal](docs/journal/): how each milestone was built, step by step, with the problems met and how they were fixed. Start with [M1 — Foundation](docs/journal/m1-foundation/).
 
 ## Roadmap
 
 | Milestone | Scope | Status |
 | --- | --- | --- |
-| M1 — Foundation | Proxmox, VMs with Terraform, k3s with Ansible | In progress |
+| [M1 — Foundation](docs/journal/m1-foundation/) | Proxmox, VMs with Terraform, k3s with Ansible | Done |
 | M2 — Local app | VulnWatch MVP | To do |
 | M3 — Supply chain | Image scanning, SBOM, signing | To do |
 | M4 — GitOps | Staging and production deployments with ArgoCD | To do |
@@ -117,10 +118,12 @@ Each step is also a target of its own; run `make help` to list them all.
 ```
 terraform/      Proxmox VMs, Cloudflare DNS
 ansible/        VM hardening, k3s installation
+scripts/        helper scripts (cloud-init template build)
 platform/       ArgoCD, monitoring, security, databases
 apps/           application deployments (staging, production)
 docs/
 ├── adr/        architecture decision records
+├── journal/    build journal, one folder per milestone
 ├── runbooks/   operational procedures
 └── postmortems/ real incidents and lessons learned
 ```
