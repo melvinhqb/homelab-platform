@@ -29,17 +29,40 @@ sha512sum -c SHA512SUMS --ignore-missing
 - The second `wget` downloads the checksum file published for the same release. `-O` names it `SHA512SUMS`, so an older copy in the directory is overwritten instead of being saved as `SHA512SUMS.1`.
 - `sha512sum -c` hashes the image and compares it with the published checksum. `--ignore-missing` skips the other images listed in the file that were not downloaded. The expected output is `...qcow2: OK`. Anything else means a corrupted or tampered download: delete it and start over.
 
-### 2. Create the base VM and import the disk
+### 2. Add the QEMU guest agent to the image
+
+The Debian cloud image does not ship `qemu-guest-agent`. Installing it in the image, rather than in each VM after boot, means every clone has a working agent from its first boot: Proxmox and Terraform can read its IP address and shut it down cleanly right away.
+
+```bash
+apt install -y libguestfs-tools
+```
+
+Installs `virt-customize` (part of libguestfs) on the Proxmox node. It edits a disk image offline, without booting it.
+
+```bash
+cp debian-13-generic-amd64-20261111-2659.qcow2 debian13-agent.qcow2
+```
+
+Works on a copy, so the original image, verified against `SHA512SUMS`, stays untouched and can be checked again later.
+
+```bash
+virt-customize -a debian13-agent.qcow2 --install qemu-guest-agent --truncate /etc/machine-id
+```
+
+- `--install qemu-guest-agent` installs the package inside the image with its own package manager. The node needs Internet access to reach the Debian mirrors.
+- `--truncate /etc/machine-id` empties the machine ID that the package installation may have generated. Each clone then creates its own ID at first boot. Clones sharing a machine ID can get the same DHCP lease and confuse systemd and journald.
+
+### 3. Create the base VM and import the disk
 
 ```bash
 qm create 9000 --name debian13-cloudinit --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
-qm disk import 9000 debian-13-generic-amd64-20261111-2659.qcow2 local-lvm
+qm disk import 9000 debian13-agent.qcow2 local-lvm
 ```
 
 - `qm create` creates an empty VM shell with ID 9000. A high ID keeps templates apart from regular VMs. It gets 2 GiB of RAM, 2 vCPUs and a VirtIO network card on bridge `vmbr0`. These are only defaults: each clone can override them.
-- `qm disk import` converts the qcow2 image and copies it into the `local-lvm` storage. The disk is attached to VM 9000 as an *unused* disk, named `vm-9000-disk-0`. Step 3 attaches it.
+- `qm disk import` converts the customized qcow2 image and copies it into the `local-lvm` storage. The disk is attached to VM 9000 as an *unused* disk, named `vm-9000-disk-0`. Step 4 attaches it.
 
-### 3. Configure the hardware
+### 4. Configure the hardware
 
 ```bash
 qm set 9000 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-9000-disk-0 \
@@ -55,9 +78,9 @@ The commands are chained with `&&`, so the chain stops at the first error instea
 - `--ide2 local-lvm:cloudinit`: adds the cloud-init drive. Proxmox writes the user, SSH keys and network settings to this small virtual CD-ROM, and cloud-init reads them at first boot.
 - `--boot order=scsi0`: boots only from the system disk, never from the network or the cloud-init drive.
 - `--serial0 socket --vga serial0`: adds a serial port and uses it as the display. Debian cloud images send their console to the serial port, so without this the Proxmox console stays blank.
-- `--agent enabled=1`: enables the QEMU guest agent channel. Proxmox can then read the VM's IP addresses and shut it down cleanly. The `qemu-guest-agent` package must also be installed in the guest.
+- `--agent enabled=1`: enables the QEMU guest agent channel. Proxmox can then read the VM's IP addresses and shut it down cleanly. The `qemu-guest-agent` package must also be installed in the guest: step 2 already added it to the image.
 
-### 4. Check, then convert to a template
+### 5. Check, then convert to a template
 
 ```bash
 qm config 9000
