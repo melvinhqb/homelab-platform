@@ -2,6 +2,15 @@
 - name: Prepare every node of the cluster
   hosts: k3s_cluster
   become: true
+  gather_facts: false
+  pre_tasks:
+    - name: Wait until the VM accepts SSH connections
+      ansible.builtin.wait_for_connection:
+        delay: 5
+        timeout: 300
+
+    - name: Gather facts
+      ansible.builtin.setup:
   roles:
     - base
 
