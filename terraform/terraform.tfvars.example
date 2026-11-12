@@ -1,12 +1,13 @@
 # Copy this file to terraform.tfvars (ignored by Git) and adapt it to your network.
 
-gateway        = "192.168.1.1"
+gateway        = "10.0.0.1"
+vm_user        = "admin"
 ssh_public_key = "ssh-ed25519 AAAA... user@host"
 
 vms = {
   "k3s-server-1" = {
     vm_id     = 201
-    ip        = "192.168.1.201"
+    ip        = "10.0.0.11"
     cores     = 2
     memory_mb = 2048
     disk_gb   = 40
@@ -14,7 +15,7 @@ vms = {
   }
   "k3s-agent-1" = {
     vm_id     = 202
-    ip        = "192.168.1.202"
+    ip        = "10.0.0.21"
     cores     = 4
     memory_mb = 4096
     disk_gb   = 120

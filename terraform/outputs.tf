@@ -9,6 +9,7 @@ output "vms" {
 }
 
 # Ansible inventory generated from the same source of truth as the VMs.
+# It holds the real IPs and user name, so the result is git-ignored.
 # Usage (from the repo root): make inventory
 output "ansible_inventory" {
   description = "Ansible inventory (YAML) for the k3s cluster"
