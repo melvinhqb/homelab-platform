@@ -4,10 +4,25 @@ Base for all VMs. Run on the Proxmox node, over SSH.
 
 Selected image: **debian-13-generic-amd64-20261111-2659**. It is a dated release, never `latest`, so builds are reproducible. The `genericcloud` variant was not published for this release.
 
+## Quick path: script
+
+[`scripts/build-template.sh`](../../scripts/build-template.sh) runs steps 1 to 5 below in one go. From your workstation, without copying the script to the node:
+
+```bash
+ssh root@<PROXMOX_HOST> 'bash -s' < scripts/build-template.sh
+```
+
+- It stops at the first error and refuses to run if VM `9000` already exists, so it never overwrites a template.
+- It re-verifies the image checksum on every run, even when the image is already downloaded.
+- Defaults match `terraform/variables.tf`. Override them with variables, for example `'VMID=9001 STORAGE=local-zfs bash -s'`. They are listed at the top of the script.
+
+The steps below explain what the script does, and remain the manual procedure.
+
 ## Placeholders
 
 | Placeholder       | Meaning                                              | Example          |
 |-------------------|------------------------------------------------------|------------------|
+| `<PROXMOX_HOST>`  | Address of the Proxmox node                          | `10.0.0.2`       |
 | `<USER>`          | Default user created by cloud-init                   | `admin`          |
 | `<KEY_COMMENT>`   | Comment identifying your key in `authorized_keys`    | `workstation`    |
 | `<VM_IP>`         | Static IP of the test clone                          | `10.0.0.210`     |
