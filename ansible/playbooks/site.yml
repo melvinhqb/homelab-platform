@@ -1,0 +1,18 @@
+---
+- name: Prepare every node of the cluster
+  hosts: k3s_cluster
+  become: true
+  roles:
+    - base
+
+- name: Install the k3s server
+  hosts: server
+  become: true
+  roles:
+    - k3s_server
+
+- name: Join the k3s agents
+  hosts: agent
+  become: true
+  roles:
+    - k3s_agent

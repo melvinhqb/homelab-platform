@@ -36,7 +36,6 @@ variable "network_prefix" {
 variable "vm_user" {
   description = "User created by cloud-init in every VM"
   type        = string
-  default     = "melvin"
 }
 
 variable "ssh_public_key" {

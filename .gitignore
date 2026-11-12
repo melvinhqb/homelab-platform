@@ -65,3 +65,7 @@ keys.txt
 Thumbs.db
 .idea/
 .vscode/
+
+# --- Generated files with lab details (IPs, user names) ---
+# Rebuild with: make inventory (template: hosts.yml.example)
+ansible/inventory/hosts.yml

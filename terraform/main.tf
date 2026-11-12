@@ -11,10 +11,8 @@ resource "proxmox_virtual_environment_vm" "k3s" {
     full  = true
   }
 
-  # qemu-guest-agent is not in the base image yet: Ansible will install it.
-  # Enabling it now would make Terraform wait for an agent that never answers.
   agent {
-    enabled = false
+    enabled = true
   }
 
   cpu {

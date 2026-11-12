@@ -1,0 +1,57 @@
+---
+# The official install script downloads the pinned k3s binary
+# and verifies its SHA256 checksum before installing it.
+- name: Download the k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /usr/local/bin/k3s-install.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the k3s server
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s-install.sh
+    creates: /usr/local/bin/k3s
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_EXEC: "server --write-kubeconfig-mode 0600 --tls-san {{ ansible_host }}"
+
+- name: Wait for the join token
+  ansible.builtin.wait_for:
+    path: /var/lib/rancher/k3s/server/node-token
+    timeout: 120
+
+- name: Read the join token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_server_token_file
+  no_log: true
+
+- name: Keep the join token for the agents
+  ansible.builtin.set_fact:
+    k3s_server_token: "{{ k3s_server_token_file.content | b64decode | trim }}"
+  no_log: true
+
+- name: Read the admin kubeconfig
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: k3s_server_kubeconfig
+  no_log: true
+
+- name: Create the local kubeconfig directory
+  ansible.builtin.file:
+    path: "{{ kubeconfig_local_path | dirname }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+
+- name: Write the kubeconfig on the control machine
+  ansible.builtin.copy:
+    content: "{{ k3s_server_kubeconfig.content | b64decode | replace('127.0.0.1', ansible_host) }}"
+    dest: "{{ kubeconfig_local_path }}"
+    mode: "0600"
+  delegate_to: localhost
+  become: false
+  no_log: true
