@@ -1,4 +1,6 @@
-# Adds KSOPS (and the kustomize build it ships with) to the repo server.
+# Adds the KSOPS binary to the repo server. ArgoCD keeps its own kustomize:
+# the one bundled with the KSOPS image (v5.3.0) is older and panics on the
+# $patch: delete patches in remove-unused-components.yaml.
 # The age private key comes from the `sops-age` secret, created by
 # `make sops-key` from the workstation: it is never stored in Git.
 apiVersion: apps/v1
@@ -19,7 +21,7 @@ spec:
       initContainers:
         - name: install-ksops
           image: viaductoss/ksops:v4.5.1
-          command: ["/usr/local/bin/ksops", "install", "--with-kustomize", "/custom-tools"]
+          command: ["/usr/local/bin/ksops", "install", "/custom-tools"]
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -34,9 +36,6 @@ spec:
             - name: SOPS_AGE_KEY_FILE
               value: /sops-age/keys.txt
           volumeMounts:
-            - name: custom-tools
-              mountPath: /usr/local/bin/kustomize
-              subPath: kustomize
             - name: custom-tools
               mountPath: /usr/local/bin/ksops
               subPath: ksops
