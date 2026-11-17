@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks run on platform/ by the CI (and by `make platform-check`).
+# Checks run on platform/ and apps/ by the CI (and by `make platform-check`).
 #  1. Every kustomization renders (except those that need KSOPS to decrypt).
 #  2. No Secret is committed in clear text: Secrets only live in *.sops.yaml
 #     files, and each of those must actually be encrypted by SOPS.
@@ -30,7 +30,7 @@ while IFS= read -r k; do
   else
     echo "FAIL  $dir"; status=1
   fi
-done < <(find platform -name kustomization.yaml | sort)
+done < <(find platform apps -name kustomization.yaml | sort)
 
 echo "==> Looking for clear-text Secrets"
 while IFS= read -r f; do
@@ -44,7 +44,7 @@ while IFS= read -r f; do
         echo "FAIL  $f contains a Secret: encrypt it with SOPS (*.sops.yaml)"; status=1
       fi ;;
   esac
-done < <(find platform -name "*.yaml" | sort)
+done < <(find platform apps -name "*.yaml" | sort)
 
 [ "$status" -eq 0 ] && echo "All platform checks passed."
 exit "$status"

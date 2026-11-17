@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: shortlink
+spec:
+  selector:
+    app.kubernetes.io/name: shortlink
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    # Scraped by the monitoring stack (M3). Never routed to the Internet.
+    - name: management
+      port: 8081
+      targetPort: management

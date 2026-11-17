@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - "platform/**"
+      - "apps/**"
       - "scripts/check-platform.sh"
       - ".github/workflows/platform.yml"
   push:
     branches: [main]
     paths:
       - "platform/**"
+      - "apps/**"
       - "scripts/check-platform.sh"
       - ".github/workflows/platform.yml"
 
