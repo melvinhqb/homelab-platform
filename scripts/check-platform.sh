@@ -8,6 +8,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 status=0
 
+# Render with the same kustomize version as ArgoCD (the CI installs it).
+# kubectl's embedded kustomize can differ and hide version-specific bugs.
+if command -v kustomize > /dev/null; then
+  render() { kustomize build "$1"; }
+  echo "Using $(kustomize version)"
+else
+  render() { kubectl kustomize "$1"; }
+  echo "kustomize not found: falling back to kubectl kustomize (may differ from ArgoCD)"
+fi
+
 echo "==> Rendering kustomizations"
 while IFS= read -r k; do
   dir=$(dirname "$k")
@@ -15,7 +25,7 @@ while IFS= read -r k; do
     echo "skip  $dir (needs KSOPS and the age key)"
     continue
   fi
-  if kubectl kustomize "$dir" > /dev/null; then
+  if render "$dir" > /dev/null; then
     echo "ok    $dir"
   else
     echo "FAIL  $dir"; status=1
