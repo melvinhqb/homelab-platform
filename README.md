@@ -6,7 +6,7 @@ A self-hosted DevSecOps platform, fully described as code.
 
 Build from scratch a platform that deploys an application in an **automated**, **secure** and **observable** way. Everything is code: the whole platform can be destroyed and rebuilt with a single command.
 
-This repository holds the **infrastructure and deployments**. The application it runs, [VulnWatch](https://github.com/<your-account>/vulnwatch), lives in its own repository: a vulnerability monitoring service that analyzes project SBOMs and flags components affected by CVEs.
+This repository holds the **infrastructure and deployments**. The application it runs, **Shortlink**, lives in its own repository: a small Spring Boot URL shortener (PostgreSQL, Flyway, Actuator). It is deliberately simple, so the effort goes into building, shipping, watching and securing it.
 
 ## Stack
 
@@ -15,9 +15,20 @@ This repository holds the **infrastructure and deployments**. The application it
 - **Configuration**: Ansible (hardening, k3s installation)
 - **Orchestration**: k3s
 - **Delivery**: GitOps with ArgoCD, Helm and Kustomize
-- **Observability**: Prometheus, Grafana, Loki, Alertmanager
-- **Security**: SOPS, Kyverno, Trivy, cert-manager, IaC scanning in CI
+- **Observability**: VictoriaMetrics, vmalert, Alertmanager, Grafana
+- **Security**: SOPS, Kyverno, Trivy, cosign, CycloneDX SBOMs, IaC scanning in CI
 - **Exposure**: Cloudflare Tunnel, no open ports
+
+## Resource budget
+
+The whole lab runs on one laptop with **8 GB of RAM**. After Proxmox, k3s and the VM operating systems, about 4 to 5 GB are left for workloads. This drives the tool choices:
+
+- **Run in CI, not in the cluster.** Image builds, SBOM generation, Trivy scans and cosign signing run on GitHub Actions and cost no cluster memory.
+- **Pick the light option.** VictoriaMetrics instead of the full kube-prometheus-stack, a trimmed ArgoCD (no Dex, notifications or ApplicationSet), a single Kyverno admission controller.
+- **Defer the heavy tools.** Dependency-Track (about 5 GB) and Loki are planned as extensions once the host gets more RAM. Until then, a nightly CI job rescans the SBOMs of deployed images for new CVEs.
+- **Swap is a safety net, not capacity.** KSM on the host and zram in the VMs reclaim some memory; JVM workloads must never rely on swap.
+
+The core platform is expected to fit in about 2.5 GB.
 
 ## Current architecture (M1)
 
@@ -107,15 +118,25 @@ Each step is also a target of its own; run `make help` to list them all.
 
 ## Roadmap
 
+The platform is built first, so the application lands on a complete delivery chain.
+
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | [M1 — Foundation](docs/journal/m1-foundation/) | Proxmox, VMs with Terraform, k3s with Ansible | Done |
-| M2 — Local app | VulnWatch MVP | To do |
-| M3 — Supply chain | Image scanning, SBOM, signing | To do |
-| M4 — GitOps | Staging and production deployments with ArgoCD | To do |
-| M5 — Observability | Metrics, logs, alerting | To do |
-| M6 — Platform security | Policies, encrypted secrets, TLS | To do |
-| M7 — Reliability | Tested backups, runbooks, postmortems | To do |
+| M2 — GitOps | ArgoCD (app of apps) bootstrapped by `make rebuild`, secrets encrypted with SOPS and age | To do |
+| M3 — Observability | VictoriaMetrics, vmalert, Alertmanager, Grafana, cluster dashboards and alerts | To do |
+| M4 — Application and supply chain | Shortlink MVP; CI with CycloneDX SBOM, Trivy, cosign and GHCR; staging and production overlays; nightly SBOM rescan | To do |
+| M5 — Platform security | Kyverno (signed images only, pod security), Cloudflare Tunnel and DNS with Terraform | To do |
+| M6 — Reliability | Tested PostgreSQL backups and restore, runbooks, postmortems | To do |
+
+### Extensions (after a RAM upgrade)
+
+| Extension | Replaces in the meantime |
+| --- | --- |
+| Dependency-Track, fed by the CI SBOMs | Nightly SBOM rescan in CI |
+| Loki for logs | `kubectl logs` |
+| cert-manager for in-cluster TLS | TLS terminated by Cloudflare |
+| Always-on staging | Staging scaled to zero outside validation runs |
 
 ## Repository layout
 
