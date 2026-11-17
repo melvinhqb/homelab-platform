@@ -1,0 +1,20 @@
+# Root of the "app of apps": every Application in platform/apps/ is created
+# and kept in sync from here. Applied once by `make bootstrap`.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/melvinhqb/homelab-platform.git
+    targetRevision: main
+    path: platform/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

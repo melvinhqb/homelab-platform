@@ -1,0 +1,14 @@
+# ArgoCD, installed by `make bootstrap`, then managed by ArgoCD itself
+# (see ../apps/argocd.yaml). Bump the version in one place: the URL below.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - namespace.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.7/manifests/install.yaml
+patches:
+  # Dex, notifications and ApplicationSet are not used: drop them to save memory.
+  - path: patches/remove-unused-components.yaml
+  # KSOPS lets kustomize decrypt SOPS-encrypted secrets inside the repo server.
+  - path: patches/repo-server-ksops.yaml
+  - path: patches/argocd-cm.yaml
