@@ -114,7 +114,7 @@ Each step is also a target of its own; run `make help` to list them all.
 
 - [Architecture decision records](docs/adr/): why each main option was chosen.
 - [Runbooks](docs/runbooks/): how to run each operational task.
-- [Build journal](docs/journal/): how each milestone was built, step by step, with the problems met and how they were fixed. Start with [M1 — Foundation](docs/journal/m1-foundation/).
+- [Build journal](docs/journal/): how each milestone was built, step by step, with the problems met and how they were fixed. Start with [M1 — Foundation](docs/journal/m1-foundation/), then [M2 — GitOps](docs/journal/m2-gitops/).
 
 ## Roadmap
 
@@ -123,7 +123,7 @@ The platform is built first, so the application lands on a complete delivery cha
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | [M1 — Foundation](docs/journal/m1-foundation/) | Proxmox, VMs with Terraform, k3s with Ansible | Done |
-| M2 — GitOps | ArgoCD (app of apps) bootstrapped by `make rebuild`, secrets encrypted with SOPS and age | To do |
+| [M2 — GitOps](docs/journal/m2-gitops/) | ArgoCD (app of apps) bootstrapped by `make rebuild`, secrets encrypted with SOPS and age | In progress: rebuild test left |
 | M3 — Observability | VictoriaMetrics, vmalert, Alertmanager, Grafana, cluster dashboards and alerts | To do |
 | M4 — Application and supply chain | Shortlink MVP; CI with CycloneDX SBOM, Trivy, cosign and GHCR; staging and production overlays; nightly SBOM rescan | To do |
 | M5 — Platform security | Kyverno (signed images only, pod security), Cloudflare Tunnel and DNS with Terraform | To do |
