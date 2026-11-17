@@ -76,6 +76,16 @@ generators:
 
 `make platform-check` (and the CI) fails if a `*.sops.yaml` file is not encrypted, or if a Secret appears in any other file.
 
+## Use this project for your own lab
+
+The public key in `.sops.yaml` belongs to this lab: you can encrypt with it, but not decrypt the committed secrets. They hold this lab's values anyway, so bring your own:
+
+1. Create your own age key (step 2).
+2. Replace the `age:` public key in `.sops.yaml` with yours.
+3. Recreate every `*.sops.yaml` file with your own values: write the Secret in clear text, then `sops --encrypt --in-place <file>`. The existing files cannot be re-encrypted, since only their owner can decrypt them.
+4. Point ArgoCD at your fork: replace the `repoURL` in `platform/root.yaml` and `platform/apps/*.yaml`.
+5. Run `make bootstrap` (or `make rebuild`): it loads your private key into your cluster.
+
 ## Rotate the key
 
 1. Create a new key (step 2) and add its public key to `.sops.yaml`, next to the old one.
