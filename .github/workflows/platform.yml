@@ -23,6 +23,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # kubectl is preinstalled on GitHub-hosted Ubuntu runners.
+      # Same version as the kustomize bundled with ArgoCD (platform/argocd).
+      # Check it with: kubectl -n argocd exec deploy/argocd-repo-server -- kustomize version
+      - name: Install kustomize
+        env:
+          KUSTOMIZE_VERSION: v5.8.1
+        run: |
+          base="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}"
+          tarball="kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          curl -fsSLO "$base/$tarball"
+          curl -fsSL "$base/checksums.txt" | grep " ${tarball}$" | sha256sum -c -
+          tar -xzf "$tarball" kustomize
+          sudo install kustomize /usr/local/bin/kustomize
+          kustomize version
+
       - name: Check platform manifests
         run: ./scripts/check-platform.sh
