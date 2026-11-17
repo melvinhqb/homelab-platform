@@ -1,0 +1,28 @@
+name: Platform
+
+on:
+  pull_request:
+    paths:
+      - "platform/**"
+      - "scripts/check-platform.sh"
+      - ".github/workflows/platform.yml"
+  push:
+    branches: [main]
+    paths:
+      - "platform/**"
+      - "scripts/check-platform.sh"
+      - ".github/workflows/platform.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: render and secret checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # kubectl is preinstalled on GitHub-hosted Ubuntu runners.
+      - name: Check platform manifests
+        run: ./scripts/check-platform.sh

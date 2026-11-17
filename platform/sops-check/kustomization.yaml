@@ -1,0 +1,8 @@
+# Checks that ArgoCD can decrypt SOPS secrets. See docs/runbooks/sops-age.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sops-check
+resources:
+  - namespace.yaml
+generators:
+  - secret-generator.yaml

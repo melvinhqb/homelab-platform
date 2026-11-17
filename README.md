@@ -67,7 +67,8 @@ flowchart LR
 
   The [runbook](docs/runbooks/template-cloud-init.md) explains each step.
 - A Proxmox user `terraform@pve` with a restricted role and an API token.
-- On the workstation: Terraform, Ansible, `kubectl`, and an SSH key loaded in `ssh-agent`.
+- On the workstation: Terraform, Ansible, `kubectl`, `sops`, `age`, and an SSH key loaded in `ssh-agent`.
+- An age key in `~/.config/sops/age/keys.txt`, used to encrypt and decrypt the secrets committed in this repository. See [the SOPS runbook](docs/runbooks/sops-age.md).
 - `terraform/terraform.tfvars`, created from [`terraform.tfvars.example`](terraform/terraform.tfvars.example).
 - `terraform/.env` with the Proxmox credentials, created from [`terraform/.env.example`](terraform/.env.example). Both files are git-ignored:
 
@@ -90,6 +91,9 @@ It runs, in order, and stops at the first error:
 3. `make known-hosts-reset`: forgets the SSH host keys of the recreated VMs.
 4. `make ansible`: waits for the VMs to accept SSH, hardens them, installs k3s and writes the kubeconfig to `~/.kube/homelab.yaml`.
 5. `kubectl wait`: fails unless every node is `Ready` within 3 minutes, then lists the nodes.
+6. `make bootstrap`: loads the age key into the cluster, installs ArgoCD and creates the root application. From then on, ArgoCD deploys everything under [`platform/apps/`](platform/apps/) from the `main` branch.
+
+Open the ArgoCD UI with `make argocd-ui` (prints the admin password, then serves it on https://localhost:8080).
 
 To tear everything down: `make destroy` (always asks for confirmation). A full rebuild test is `make destroy && make rebuild`.
 
@@ -118,8 +122,12 @@ Each step is also a target of its own; run `make help` to list them all.
 ```
 terraform/      Proxmox VMs, Cloudflare DNS
 ansible/        VM hardening, k3s installation
-scripts/        helper scripts (cloud-init template build)
-platform/       ArgoCD, monitoring, security, databases
+scripts/        helper scripts (cloud-init template build, platform checks)
+platform/       everything ArgoCD deploys
+├── root.yaml   root application (app of apps), applied by make bootstrap
+├── apps/       one ArgoCD Application per component
+├── argocd/     ArgoCD itself, with KSOPS for encrypted secrets
+└── sops-check/ smoke test: one SOPS-encrypted Secret
 apps/           application deployments (staging, production)
 docs/
 ├── adr/        architecture decision records

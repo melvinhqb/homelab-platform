@@ -1,0 +1,23 @@
+# ArgoCD manages its own installation from platform/argocd.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/melvinhqb/homelab-platform.git
+    targetRevision: main
+    path: platform/argocd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      # Never let a bad commit delete ArgoCD's own resources.
+      prune: false
+      selfHeal: true
+    syncOptions:
+      # The ArgoCD CRDs are too large for client-side apply.
+      - ServerSideApply=true

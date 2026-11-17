@@ -1,0 +1,8 @@
+# SOPS configuration: which files get encrypted, with which key.
+# The age PUBLIC key below can only encrypt. The private key never enters Git
+# (see docs/runbooks/sops-age.md).
+creation_rules:
+  - path_regex: \.sops\.yaml$
+    # Only the values are encrypted: names and namespaces stay readable in reviews.
+    encrypted_regex: ^(data|stringData)$
+    age: age1neps2jk3audtx6hk4crqnf3qa03kmrxpcet0du4cqsp77svf69es6n4v6m
