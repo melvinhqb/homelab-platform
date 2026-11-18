@@ -123,7 +123,7 @@ The platform is built first, so the application lands on a complete delivery cha
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | [M1 — Foundation](docs/journal/m1-foundation/) | Proxmox, VMs with Terraform, k3s with Ansible | Done |
-| [M2 — GitOps](docs/journal/m2-gitops/) | ArgoCD (app of apps) bootstrapped by `make rebuild`, secrets encrypted with SOPS and age | In progress: rebuild test left |
+| [M2 — GitOps](docs/journal/m2-gitops/) | ArgoCD (app of apps) bootstrapped by `make rebuild`, secrets encrypted with SOPS and age | Done |
 | M3 — Observability | VictoriaMetrics, vmalert, Alertmanager, Grafana, cluster dashboards and alerts | To do |
 | M4 — Application and supply chain | Shortlink MVP; CI with CycloneDX SBOM, Trivy, cosign and GHCR; staging and production overlays; nightly SBOM rescan | To do |
 | M5 — Platform security | Kyverno (signed images only, pod security), Cloudflare Tunnel and DNS with Terraform | To do |
