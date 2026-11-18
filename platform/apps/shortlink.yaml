@@ -1,0 +1,22 @@
+# Shortlink, the demo application, in production.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shortlink
+  namespace: argocd
+  finalizers:
+    # Deleting this Application also deletes what it deployed.
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/melvinhqb/homelab-platform.git
+    targetRevision: main
+    path: apps/shortlink/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: shortlink
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

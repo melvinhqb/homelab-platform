@@ -1,0 +1,15 @@
+# Production: what the shortlink ArgoCD application deploys.
+# To release a new version, change the tag and digest below.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: shortlink
+resources:
+  - namespace.yaml
+  - ../../base
+generators:
+  - secret-generator.yaml
+images:
+  - name: ghcr.io/melvinhqb/shortlink
+    newTag: 0.1.0@sha256:8424d83042201e34e5f35685614fd1f8dd7fed192d61c42d090880afb6ee446b
+  - name: postgres
+    newTag: 18.7-alpine3.24@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015

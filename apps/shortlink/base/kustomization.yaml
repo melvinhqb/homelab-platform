@@ -1,0 +1,15 @@
+# Shortlink and its PostgreSQL database, shared by every environment.
+# Images, namespace and secrets are set by the overlays.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: shortlink
+    includeSelectors: false
+resources:
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - postgres-networkpolicy.yaml
